@@ -4,7 +4,7 @@
   "description": "GitHub Action to prevent unlucky issue and PR numbers",
   "main": "src/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js"
   },
   "keywords": [
     "github-action",

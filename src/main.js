@@ -161,9 +161,10 @@ async function getExistingUnluckyItems(octokit, owner, repo, unluckyNumbers) {
 
     const unluckyItems = [];
 
-    // Check issues (excluding PRs)
+    // Check issues (excluding PRs and our own placeholder issues)
     issuesResponse.data
       .filter(issue => !issue.pull_request)
+      .filter(issue => !issue.labels.some(label => label.name === 'superstitious'))
       .forEach(issue => {
         if (isUnluckyNumber(issue.number, unluckyNumbers)) {
           unluckyItems.push({ type: 'issue', item: issue });
@@ -181,6 +182,146 @@ async function getExistingUnluckyItems(octokit, owner, repo, unluckyNumbers) {
   } catch (error) {
     core.error(`Error getting existing unlucky items: ${error.message}`);
     return [];
+  }
+}
+
+/**
+ * Duplicate an issue with a safe number
+ */
+async function duplicateIssue(octokit, owner, repo, originalIssue, config, dryRun) {
+  if (dryRun) {
+    core.info(`[DRY RUN] Would duplicate issue #${originalIssue.number}: ${originalIssue.title}`);
+    return null;
+  }
+
+  try {
+    const clearingConfig = config.clearing || {};
+    const titleSuffix = clearingConfig.title_suffix || ' (moved from unlucky number)';
+    
+    // Create the new issue
+    const newIssue = await octokit.rest.issues.create({
+      owner,
+      repo,
+      title: originalIssue.title + titleSuffix,
+      body: originalIssue.body || '',
+      labels: originalIssue.labels.map(label => label.name),
+      assignees: originalIssue.assignees.map(assignee => assignee.login),
+      milestone: originalIssue.milestone ? originalIssue.milestone.number : undefined
+    });
+
+    core.info(`Created duplicate issue #${newIssue.data.number} for unlucky #${originalIssue.number}`);
+
+    // Add explanation comment if configured
+    if (clearingConfig.add_explanation_comment) {
+      const explanationTemplate = clearingConfig.explanation_comment || 
+        'This issue was moved from #{original_number} to avoid an unlucky number.\nThe original issue has been closed and this is the continuation.';
+      
+      const explanation = explanationTemplate.replace('{original_number}', originalIssue.number);
+      
+      await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: newIssue.data.number,
+        body: explanation
+      });
+    }
+
+    return newIssue.data;
+  } catch (error) {
+    core.error(`Failed to duplicate issue #${originalIssue.number}: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Duplicate a pull request (create issue since we can't duplicate PRs)
+ */
+async function duplicatePullRequest(octokit, owner, repo, originalPR, config, dryRun) {
+  if (dryRun) {
+    core.info(`[DRY RUN] Would create issue for unlucky PR #${originalPR.number}: ${originalPR.title}`);
+    return null;
+  }
+
+  try {
+    const clearingConfig = config.clearing || {};
+    const titleSuffix = clearingConfig.title_suffix || ' (moved from unlucky number)';
+    
+    // Create an issue to track the unlucky PR
+    const body = `**This issue was created to replace unlucky PR #${originalPR.number}**
+
+Original PR: ${originalPR.html_url}
+Original Title: ${originalPR.title}
+Original Author: @${originalPR.user.login}
+
+---
+
+${originalPR.body || ''}`;
+
+    const newIssue = await octokit.rest.issues.create({
+      owner,
+      repo,
+      title: `[PR #${originalPR.number}] ${originalPR.title}${titleSuffix}`,
+      body: body,
+      labels: ['moved-from-pr', 'superstitious-clearing'],
+      assignees: [originalPR.user.login]
+    });
+
+    core.info(`Created tracking issue #${newIssue.data.number} for unlucky PR #${originalPR.number}`);
+    return newIssue.data;
+  } catch (error) {
+    core.error(`Failed to create tracking issue for PR #${originalPR.number}: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Close an unlucky item after duplication
+ */
+async function closeUnluckyItem(octokit, owner, repo, item, type, newItemNumber, dryRun) {
+  if (dryRun) {
+    core.info(`[DRY RUN] Would close unlucky ${type} #${item.number}`);
+    return;
+  }
+
+  try {
+    const closeComment = `This ${type} was closed due to having an unlucky number (#${item.number}). The content has been moved to #${newItemNumber}.`;
+    
+    if (type === 'issue') {
+      // Add comment and close issue
+      await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: item.number,
+        body: closeComment
+      });
+      
+      await octokit.rest.issues.update({
+        owner,
+        repo,
+        issue_number: item.number,
+        state: 'closed',
+        labels: [...item.labels.map(l => l.name), 'unlucky-number', 'moved']
+      });
+    } else if (type === 'pr') {
+      // Add comment and close PR
+      await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: item.number,
+        body: closeComment
+      });
+      
+      await octokit.rest.pulls.update({
+        owner,
+        repo,
+        pull_number: item.number,
+        state: 'closed'
+      });
+    }
+
+    core.info(`Closed unlucky ${type} #${item.number}`);
+  } catch (error) {
+    core.warning(`Failed to close unlucky ${type} #${item.number}: ${error.message}`);
   }
 }
 
@@ -219,10 +360,25 @@ async function run() {
       
       if (unluckyItems.length > 0) {
         core.info(`Found ${unluckyItems.length} unlucky items to clear`);
+        
         for (const { type, item } of unluckyItems) {
-          core.info(`Found unlucky ${type} #${item.number}: ${item.title}`);
-          // TODO: Implement duplication and closure logic
-          issuesCleared++;
+          core.info(`Processing unlucky ${type} #${item.number}: ${item.title}`);
+          
+          try {
+            let newItem;
+            if (type === 'issue') {
+              newItem = await duplicateIssue(octokit, owner, repo, item, config, dryRun);
+            } else if (type === 'pr') {
+              newItem = await duplicatePullRequest(octokit, owner, repo, item, config, dryRun);
+            }
+            
+            if (newItem) {
+              await closeUnluckyItem(octokit, owner, repo, item, type, newItem.number, dryRun);
+              issuesCleared++;
+            }
+          } catch (error) {
+            core.error(`Failed to clear unlucky ${type} #${item.number}: ${error.message}`);
+          }
         }
       } else {
         core.info('No existing unlucky items found');
@@ -305,4 +461,13 @@ if (require.main === module) {
   run();
 }
 
-module.exports = { run, loadConfig, isUnluckyNumber, findUnluckyNumbersInRange };
+module.exports = { 
+  run, 
+  loadConfig, 
+  isUnluckyNumber, 
+  findUnluckyNumbersInRange,
+  getExistingUnluckyItems,
+  duplicateIssue,
+  duplicatePullRequest,
+  closeUnluckyItem
+};
