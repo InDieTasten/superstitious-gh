@@ -20,12 +20,12 @@ reservation_space: 5
 # Whether to enable clearing mode by default
 # In clearing mode, existing unlucky issues/PRs are duplicated
 # with safe numbers and the original unlucky ones are closed/deleted
-clearing_mode: false
+clearing_mode: true
 
 # Whether to enable deletion mode by default
 # In deletion mode, unlucky issues are marked as deleted rather than just closed
 # This applies to both placeholder cleanup and clearing mode operations
-deletion_mode: false
+deletion_mode: true
 
 # Placeholder issue settings
 placeholder:
@@ -34,8 +34,6 @@ placeholder:
     This issue was created automatically to prevent an unlucky number from being assigned.
     
     **This is a placeholder issue and will be deleted shortly.**
-    
-    > Unlucky numbers avoided: 7, 13, 66, 77, 666, 777, 1313, 1337
   labels:
     - "superstitious"
     - "placeholder"
