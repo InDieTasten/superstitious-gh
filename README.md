@@ -20,12 +20,7 @@ Superstitious GitHub is a GitHub Action that automatically prevents issues and p
 By default, the following numbers are considered unlucky:
 - `7` - Unlucky in some cultures
 - `13` - Triskaidekaphobia (fear of 13)
-- `66` - Related to "Number of the Beast"
-- `77` - Double unlucky sevens
-- `666` - Number of the Beast
-- `777` - Sometimes considered unlucky gambling number
-- `1313` - Double 13
-- `1337` - Leet speak (may be considered inappropriate)
+- `666` - Related to "Number of the Beast"
 
 ## Quick Start
 
@@ -46,6 +41,10 @@ on:
 
 jobs:
   protect:
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -83,8 +82,6 @@ placeholder:
 |-------|-------------|----------|---------|
 | `github-token` | GitHub token for API access | Yes | `${{ github.token }}` |
 | `config-path` | Path to configuration file | No | `superstitious.yml` |
-| `clearing-mode` | Clear existing unlucky issues/PRs | No | `false` |
-| `dry-run` | Run without making changes | No | `false` |
 
 ### Outputs
 
@@ -110,8 +107,8 @@ unlucky_numbers:
   - 1313
   - 1337
 
-# How many numbers ahead to reserve (default: 5)
-reservation_space: 5
+# How many numbers ahead to reserve (default: 1)
+reservation_space: 1
 
 # Whether to enable clearing mode by default
 clearing_mode: false
@@ -131,6 +128,12 @@ clearing:
   preserve_content: true
   title_suffix: " (moved from unlucky number)"
   add_explanation_comment: true
+
+# Dry run mode
+dry_run: false
+
+# Whether to delete placeholder issues after use (adds additional labels and renames the issue title)
+deletion_mode: false,
 ```
 
 ## Usage Examples
@@ -150,24 +153,6 @@ clearing:
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     config-path: '.github/superstitious-config.yml'
-```
-
-### Dry Run Mode
-
-```yaml
-- uses: InDieTasten/superstitious-gh@v1
-  with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-    dry-run: 'true'
-```
-
-### Clearing Mode
-
-```yaml
-- uses: InDieTasten/superstitious-gh@v1
-  with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-    clearing-mode: 'true'
 ```
 
 ## How It Works

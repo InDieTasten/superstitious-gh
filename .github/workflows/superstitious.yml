@@ -9,17 +9,6 @@ on:
     # Run every hour to proactively protect upcoming numbers
     - cron: '0 * * * *'
   workflow_dispatch:
-    inputs:
-      clearing_mode:
-        description: 'Run in clearing mode to fix existing unlucky numbers'
-        required: false
-        default: false
-        type: boolean
-      dry_run:
-        description: 'Run in dry-run mode (no actual changes)'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   superstitious-protection:
@@ -40,8 +29,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           config-path: 'superstitious.yml'
-          clearing-mode: ${{ github.event.inputs.clearing_mode || 'false' }}
-          dry-run: ${{ github.event.inputs.dry_run || 'false' }}
 
       - name: Report Results
         run: |

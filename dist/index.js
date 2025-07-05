@@ -34031,9 +34031,9 @@ function wrappy (fn, cb) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DEFAULT_CONFIG = void 0;
 exports.DEFAULT_CONFIG = {
-    unlucky_numbers: [7, 13, 66, 77, 666, 777, 1313, 1337],
-    reservation_space: 5,
-    clearing_mode: false,
+    unlucky_numbers: [7, 13, 666],
+    reservation_space: 1,
+    clearing_mode: true,
     deletion_mode: false,
     placeholder: {
         title: "🔮 Reserved for superstitious purposes",
