@@ -1,0 +1,79 @@
+# Example: Custom Superstitious Configuration
+# Copy this to superstitious.yml in your repository root
+
+# Numbers to avoid for issues and pull requests
+# You can customize this list based on your own superstitions
+unlucky_numbers:
+  - 4      # Unlucky in East Asian cultures
+  - 7      # Unlucky in some cultures  
+  - 13     # Triskaidekaphobia (fear of 13)
+  - 17     # Unlucky in Italy
+  - 39     # Unlucky in Afghanistan
+  - 43     # Unlucky in Japan (sounds like "death")
+  - 66     # Related to "Number of the Beast"
+  - 77     # Double unlucky sevens
+  - 191    # Cursed number in some contexts
+  - 666    # Number of the Beast
+  - 777    # Sometimes considered unlucky gambling number
+  - 1313   # Double 13
+  - 1337   # Leet speak (may be considered inappropriate)
+
+# How many numbers ahead to reserve to prevent race conditions
+# when multiple issues/PRs are created simultaneously
+# Higher values provide more protection but create more placeholder issues
+reservation_space: 10
+
+# Whether to enable clearing mode by default
+# In clearing mode, existing unlucky issues/PRs are duplicated
+# with safe numbers and the original unlucky ones are deleted
+clearing_mode: false
+
+# Placeholder issue settings
+placeholder:
+  title: "🔮 Numerology Protection - Reserved"
+  body: |
+    ## 🔮 Superstitious Number Protection
+    
+    This issue was created automatically to prevent an unlucky number from being assigned to a real issue or pull request.
+    
+    **This is a temporary placeholder and will be removed shortly.**
+    
+    ### Protected Numbers
+    We avoid these numbers for superstitious reasons:
+    - **4** - Unlucky in East Asian cultures
+    - **7** - Unlucky in some cultures
+    - **13** - Triskaidekaphobia (fear of 13)
+    - **17** - Unlucky in Italy
+    - **666** - Number of the Beast
+    - **777** - Gambling superstition
+    - **1313** - Double 13
+    - **1337** - Leet speak
+    
+    > *"Better safe than sorry when it comes to luck!"* 🍀
+  labels:
+    - "superstitious"
+    - "placeholder" 
+    - "auto-generated"
+    - "🔮"
+
+# Settings for clearing mode
+clearing:
+  # Whether to preserve original issue/PR content when duplicating
+  preserve_content: true
+  
+  # Suffix to add to duplicated issue/PR titles
+  title_suffix: " (relocated from unlucky number)"
+  
+  # Whether to add a comment explaining the move
+  add_explanation_comment: true
+  
+  # Template for the explanation comment
+  explanation_comment: |
+    ## 🔮 Issue Relocated for Superstitious Reasons
+    
+    This issue was moved from **#{original_number}** to avoid an unlucky number.
+    
+    The original issue has been closed and this is the official continuation.
+    All previous content, labels, and assignments have been preserved.
+    
+    *Thank you for understanding our commitment to avoiding digital misfortune!* ✨

@@ -1,0 +1,37 @@
+name: 'Superstitious GitHub'
+description: 'Prevents issues and pull requests from receiving unlucky numbers'
+author: 'InDieTasten'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+    default: ${{ github.token }}
+  config-path:
+    description: 'Path to the superstitious configuration file'
+    required: false
+    default: 'superstitious.yml'
+  clearing-mode:
+    description: 'Whether to clear existing unlucky issues/PRs'
+    required: false
+    default: 'false'
+  dry-run:
+    description: 'Whether to run in dry-run mode (no actual changes)'
+    required: false
+    default: 'false'
+
+outputs:
+  issues-created:
+    description: 'Number of placeholder issues created'
+  issues-cleared:
+    description: 'Number of unlucky issues cleared (clearing mode only)'
+  next-safe-number:
+    description: 'Next safe issue/PR number'
+
+runs:
+  using: 'node20'
+  main: 'dist/main.js'
+
+branding:
+  icon: 'shield'
+  color: 'purple'

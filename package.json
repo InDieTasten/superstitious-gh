@@ -1,0 +1,31 @@
+{
+  "name": "superstitious-gh",
+  "version": "1.0.0",
+  "description": "GitHub Action to prevent unlucky issue and PR numbers",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node test.js",
+    "test:e2e": "npm run build && node test-e2e.js",
+    "test:all": "npm run test && npm run test:e2e",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "github-action",
+    "superstition",
+    "issues",
+    "pull-requests"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.1",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

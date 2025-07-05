@@ -1,0 +1,54 @@
+# Superstitious GitHub Configuration
+# Configure which numbers to avoid and behavior settings
+# Action repository: https://github.com/InDieTasten/superstitious-gh
+
+# Numbers to avoid for issues and pull requests
+unlucky_numbers:
+  - 7
+  - 13
+  - 66
+  - 77
+  - 666
+  - 777
+  - 1313
+  - 1337
+
+# How many numbers ahead to reserve to prevent race conditions
+# when multiple issues/PRs are created simultaneously
+reservation_space: 5
+
+# Whether to enable clearing mode by default
+# In clearing mode, existing unlucky issues/PRs are duplicated
+# with safe numbers and the original unlucky ones are closed/deleted
+clearing_mode: false
+
+# Whether to enable deletion mode by default
+# In deletion mode, unlucky issues are marked as deleted rather than just closed
+# This applies to both placeholder cleanup and clearing mode operations
+deletion_mode: false
+
+# Placeholder issue settings
+placeholder:
+  title: "🔮 Reserved for superstitious purposes"
+  body: |
+    This issue was created automatically to prevent an unlucky number from being assigned.
+    
+    **This is a placeholder issue and will be deleted shortly.**
+    
+    > Unlucky numbers avoided: 7, 13, 66, 77, 666, 777, 1313, 1337
+  labels:
+    - "superstitious"
+    - "placeholder"
+
+# Settings for clearing mode
+clearing:
+  # Whether to preserve original issue/PR content when duplicating
+  preserve_content: true
+  # Suffix to add to duplicated issue/PR titles
+  title_suffix: " (moved from unlucky number)"
+  # Whether to add a comment explaining the move
+  add_explanation_comment: true
+  # Template for the explanation comment
+  explanation_comment: |
+    This issue was moved from #{original_number} to avoid an unlucky number.
+    The original issue has been closed and this is the continuation.
