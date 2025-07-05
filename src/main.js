@@ -425,11 +425,7 @@ async function run() {
       if (!dryRun && placeholderIssues.length > 0) {
         core.info('Scheduling cleanup of placeholder issues...');
         // In a real implementation, you might want to delay this or handle it differently
-        setTimeout(async () => {
-          for (const placeholder of placeholderIssues) {
-            await deletePlaceholderIssue(octokit, owner, repo, placeholder.number, false);
-          }
-        }, 5000); // 5 second delay
+        await cleanupPlaceholderIssues(octokit, owner, repo, placeholderIssues);
       }
     }
 
