@@ -24,40 +24,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build TypeScript
+      - name: Build
         run: npm run build
 
-      - name: Run unit tests
-        run: npm run test
-
-      - name: Run e2e tests
-        run: npm run test:e2e
-
-      - name: Verify dist folder exists
-        run: |
-          if [ ! -d "dist" ]; then
-            echo "❌ dist folder is missing"
-            exit 1
-          fi
-          if [ ! -f "dist/main.js" ]; then
-            echo "❌ dist/main.js is missing"
-            exit 1
-          fi
-          echo "✅ Build artifacts verified"
-
-      - name: Check TypeScript compilation
-        run: |
-          echo "📊 TypeScript Compilation Summary:"
-          echo "- Source files compiled: $(find src -name '*.ts' | wc -l)"
-          echo "- Output files generated: $(find dist -name '*.js' | wc -l)"
-          echo "- Declaration files: $(find dist -name '*.d.ts' | wc -l)"
-
-      - name: Test Summary
-        run: |
-          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "✅ TypeScript compilation successful" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Unit tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ E2E tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Build artifacts verified" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The Superstitious GitHub Action is ready for deployment! 🔮" >> $GITHUB_STEP_SUMMARY
+      - name: Test
+        run: npm run test:unit

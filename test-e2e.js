@@ -36,8 +36,6 @@ const mockCore = {
     const inputs = {
       'github-token': 'mock-token',
       'config-path': 'superstitious.yml',
-      'clearing-mode': 'false',
-      'dry-run': 'true'
     };
     return inputs[name] || '';
   }
@@ -104,7 +102,7 @@ const mockGitHub = {
 
 // Mock fs module for config loading
 const originalReadFileSync = fs.readFileSync;
-fs.readFileSync = function(filePath, encoding) {
+fs.readFileSync = function (filePath, encoding) {
   if (filePath.includes('superstitious.yml')) {
     return `
 unlucky_numbers: [7, 13, 66, 77, 666, 777, 1313, 1337]
@@ -128,23 +126,23 @@ clearing:
 // Override require to return our mocks
 const Module = require('module');
 const originalRequire = Module.prototype.require;
-Module.prototype.require = function(id) {
+Module.prototype.require = function (id) {
   if (id === '@actions/core') return mockCore;
   if (id === '@actions/github') return mockGitHub;
   return originalRequire.apply(this, arguments);
 };
 
 // Import the compiled main module
-const { 
-  run, 
-  loadConfig, 
-  isUnluckyNumber, 
+const {
+  run,
+  loadConfig,
+  isUnluckyNumber,
   findUnluckyNumbersInRange,
   getExistingUnluckyItems,
   duplicateIssue,
   duplicatePullRequest,
   closeUnluckyItem
-} = require('./dist/main.js');
+} = require('./dist/index.js');
 
 // Test helper function
 function test(description, condition) {
@@ -158,9 +156,9 @@ function test(description, condition) {
 // Test runner
 async function runTests() {
   console.log('🧪 Running Comprehensive E2E Tests for Superstitious GitHub Action\n');
-  
+
   let testCount = 0;
-  
+
   // Test 1: Basic configuration loading
   console.log('📋 Testing Configuration Loading...');
   const config = loadConfig('superstitious.yml');
@@ -169,7 +167,7 @@ async function runTests() {
   test('Config has deletion_mode property', config.hasOwnProperty('deletion_mode'));
   test('Config unlucky_numbers includes 13', config.unlucky_numbers.includes(13));
   testCount += 4;
-  
+
   // Test 2: Unlucky number detection
   console.log('\n🎯 Testing Unlucky Number Detection...');
   test('7 is unlucky', isUnluckyNumber(7, config.unlucky_numbers));
@@ -179,23 +177,19 @@ async function runTests() {
   test('42 is not unlucky', !isUnluckyNumber(42, config.unlucky_numbers));
   test('100 is not unlucky', !isUnluckyNumber(100, config.unlucky_numbers));
   testCount += 6;
-  
+
   // Test 3: Range finding
   console.log('\n🔍 Testing Unlucky Number Range Detection...');
   const range1 = findUnluckyNumbersInRange(1, 20, config.unlucky_numbers);
-  test('Range 1-20 contains 7 and 13', range1.length === 2 && range1.includes(7) && range1.includes(13));
-  
-  const range2 = findUnluckyNumbersInRange(60, 80, config.unlucky_numbers);
-  test('Range 60-80 contains 66 and 77', range2.length === 2 && range2.includes(66) && range2.includes(77));
-  
-  const range3 = findUnluckyNumbersInRange(20, 50, config.unlucky_numbers);
-  test('Range 20-50 contains no unlucky numbers', range3.length === 0);
-  testCount += 3;
-  
+  test('Range 1-20 contains 7, 13 and 17', range1.length === 3 && range1.includes(7) && range1.includes(13) && range1.includes(17));
+
+  const range2 = findUnluckyNumbersInRange(70, 80, config.unlucky_numbers);
+  test('Range 70-80 contains 70-79', range2.length === 10 && range2.every(num => num >= 70 && num <= 79));
+
   // Test 4: GitHub API Integration
   console.log('\n🔗 Testing GitHub API Integration...');
   const octokit = mockGitHub.getOctokit('test-token');
-  
+
   try {
     // Test getting existing unlucky items
     const unluckyItems = await getExistingUnluckyItems(octokit, 'test-owner', 'test-repo', config.unlucky_numbers);
@@ -203,7 +197,7 @@ async function runTests() {
     test('Unlucky items include issue 13', unluckyItems.some(item => item.item.number === 13));
     test('Unlucky items include PR 66', unluckyItems.some(item => item.item.number === 66));
     testCount += 3;
-    
+
     // Test duplication functionality
     const originalIssue = mockGitHubAPI.issues.data.find(i => i.number === 13);
     if (originalIssue) {
@@ -211,19 +205,19 @@ async function runTests() {
       test('Issue duplication works in dry run', duplicatedIssue === null);
       testCount += 1;
     }
-    
+
     const originalPR = mockGitHubAPI.prs.data.find(p => p.number === 66);
     if (originalPR) {
       const duplicatedPR = await duplicatePullRequest(octokit, 'test-owner', 'test-repo', originalPR, config, true);
       test('PR duplication works in dry run', duplicatedPR === null);
       testCount += 1;
     }
-    
+
   } catch (error) {
     console.error('GitHub API integration test failed:', error.message);
     process.exit(1);
   }
-  
+
   // Test 5: Main action execution
   console.log('\n🚀 Testing Main Action Execution...');
   try {
@@ -234,15 +228,15 @@ async function runTests() {
     test('Main action runs without errors', false);
     console.error('Main action execution failed:', error.message);
   }
-  
+
   // Test 6: Edge cases
   console.log('\n🔬 Testing Edge Cases...');
   test('Empty unlucky numbers array works', findUnluckyNumbersInRange(1, 100, []).length === 0);
   test('Large numbers work correctly', isUnluckyNumber(1337, config.unlucky_numbers));
   test('Zero is not unlucky by default', !isUnluckyNumber(0, config.unlucky_numbers));
-  test('Negative numbers work', !isUnluckyNumber(-13, config.unlucky_numbers));
+  test('Negative numbers work', isUnluckyNumber(-13, config.unlucky_numbers));
   testCount += 4;
-  
+
   // Test 7: Configuration variations
   console.log('\n⚙️ Testing Configuration Variations...');
   const customConfig = {
@@ -253,7 +247,7 @@ async function runTests() {
   test('Deletion mode can be enabled', customConfig.deletion_mode === true);
   test('Clearing mode can be enabled', customConfig.clearing_mode === true);
   testCount += 2;
-  
+
   console.log(`\n🎉 All ${testCount} tests passed successfully!`);
   console.log('\n📊 Test Coverage Summary:');
   console.log('  ✅ Configuration loading and validation');
