@@ -6,16 +6,11 @@
 unlucky_numbers:
   - 7
   - 13
-  - 66
-  - 77
   - 666
-  - 777
-  - 1313
-  - 1337
 
 # How many numbers ahead to reserve to prevent race conditions
 # when multiple issues/PRs are created simultaneously
-reservation_space: 5
+reservation_space: 1
 
 # Whether to enable clearing mode by default
 # In clearing mode, existing unlucky issues/PRs are duplicated
