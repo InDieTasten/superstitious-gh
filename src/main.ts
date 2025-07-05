@@ -21,7 +21,7 @@ function loadConfig(configPath: string): SuperstitiousConfig {
   try {
     const configFile = fs.readFileSync(configPath, 'utf8');
     const loadedConfig = yaml.load(configFile) as Partial<SuperstitiousConfig>;
-    
+
     // Merge with default config
     return {
       ...DEFAULT_CONFIG,
@@ -60,11 +60,11 @@ async function getNextNumber(octokit: ReturnType<typeof github.getOctokit>, owne
     ]);
 
     let maxNumber = 0;
-    
+
     if (issuesResponse.data.length > 0) {
       maxNumber = Math.max(maxNumber, issuesResponse.data[0].number);
     }
-    
+
     if (prsResponse.data.length > 0) {
       maxNumber = Math.max(maxNumber, prsResponse.data[0].number);
     }
@@ -100,11 +100,11 @@ function findUnluckyNumbersInRange(startNumber: number, endNumber: number, unluc
  * Create a placeholder issue
  */
 async function createPlaceholderIssue(
-  octokit: ReturnType<typeof github.getOctokit>, 
-  owner: string, 
-  repo: string, 
-  config: SuperstitiousConfig, 
-  number: number, 
+  octokit: ReturnType<typeof github.getOctokit>,
+  owner: string,
+  repo: string,
+  config: SuperstitiousConfig,
+  number: number,
   dryRun: boolean
 ): Promise<any> {
   if (dryRun) {
@@ -133,10 +133,10 @@ async function createPlaceholderIssue(
  * Delete a placeholder issue
  */
 async function deletePlaceholderIssue(
-  octokit: ReturnType<typeof github.getOctokit>, 
-  owner: string, 
-  repo: string, 
-  issueNumber: number, 
+  octokit: ReturnType<typeof github.getOctokit>,
+  owner: string,
+  repo: string,
+  issueNumber: number,
   dryRun: boolean,
   deletionMode: boolean = false
 ): Promise<void> {
@@ -185,7 +185,7 @@ async function cleanupPlaceholderIssues(
   dryRun: boolean = false
 ): Promise<void> {
   const deletionMode = config.deletion_mode || false;
-  
+
   for (const placeholder of placeholderIssues) {
     await deletePlaceholderIssue(octokit, owner, repo, placeholder.number, dryRun, deletionMode);
   }
@@ -195,9 +195,9 @@ async function cleanupPlaceholderIssues(
  * Get existing unlucky issues/PRs for clearing mode
  */
 async function getExistingUnluckyItems(
-  octokit: ReturnType<typeof github.getOctokit>, 
-  owner: string, 
-  repo: string, 
+  octokit: ReturnType<typeof github.getOctokit>,
+  owner: string,
+  repo: string,
   unluckyNumbers: number[]
 ): Promise<UnluckyItem[]> {
   try {
@@ -221,7 +221,7 @@ async function getExistingUnluckyItems(
     // Check issues (excluding PRs and our own placeholder issues)
     issuesResponse.data
       .filter(issue => !issue.pull_request)
-      .filter(issue => !issue.labels.some((label: any) => 
+      .filter(issue => !issue.labels.some((label: any) =>
         typeof label === 'string' ? label === 'superstitious' : label.name === 'superstitious'
       ))
       .forEach(issue => {
@@ -248,11 +248,11 @@ async function getExistingUnluckyItems(
  * Duplicate an issue with a safe number
  */
 async function duplicateIssue(
-  octokit: ReturnType<typeof github.getOctokit>, 
-  owner: string, 
-  repo: string, 
-  originalIssue: any, 
-  config: SuperstitiousConfig, 
+  octokit: ReturnType<typeof github.getOctokit>,
+  owner: string,
+  repo: string,
+  originalIssue: any,
+  config: SuperstitiousConfig,
   dryRun: boolean
 ): Promise<any> {
   if (dryRun) {
@@ -268,7 +268,7 @@ async function duplicateIssue(
       explanation_comment: 'This issue was moved from #{original_number} to avoid an unlucky number.\nThe original issue has been closed and this is the continuation.'
     };
     const titleSuffix = clearingConfig.title_suffix;
-    
+
     // Create the new issue
     const newIssue = await octokit.rest.issues.create({
       owner,
@@ -285,9 +285,9 @@ async function duplicateIssue(
     // Add explanation comment if configured
     if (clearingConfig.add_explanation_comment) {
       const explanationTemplate = clearingConfig.explanation_comment;
-      
+
       const explanation = explanationTemplate.replace('{original_number}', originalIssue.number.toString());
-      
+
       await octokit.rest.issues.createComment({
         owner,
         repo,
@@ -307,11 +307,11 @@ async function duplicateIssue(
  * Duplicate a pull request (create issue since we can't duplicate PRs)
  */
 async function duplicatePullRequest(
-  octokit: ReturnType<typeof github.getOctokit>, 
-  owner: string, 
-  repo: string, 
-  originalPR: any, 
-  config: SuperstitiousConfig, 
+  octokit: ReturnType<typeof github.getOctokit>,
+  owner: string,
+  repo: string,
+  originalPR: any,
+  config: SuperstitiousConfig,
   dryRun: boolean
 ): Promise<any> {
   if (dryRun) {
@@ -327,7 +327,7 @@ async function duplicatePullRequest(
       explanation_comment: 'This issue was moved from #{original_number} to avoid an unlucky number.\nThe original issue has been closed and this is the continuation.'
     };
     const titleSuffix = clearingConfig.title_suffix;
-    
+
     // Create an issue to track the unlucky PR
     const body = `**This issue was created to replace unlucky PR #${originalPR.number}**
 
@@ -360,12 +360,12 @@ ${originalPR.body || ''}`;
  * Close an unlucky item after duplication
  */
 async function closeUnluckyItem(
-  octokit: ReturnType<typeof github.getOctokit>, 
-  owner: string, 
-  repo: string, 
-  item: any, 
-  type: string, 
-  newItemNumber: number, 
+  octokit: ReturnType<typeof github.getOctokit>,
+  owner: string,
+  repo: string,
+  item: any,
+  type: string,
+  newItemNumber: number,
   dryRun: boolean,
   deletionMode: boolean = false
 ): Promise<void> {
@@ -377,7 +377,7 @@ async function closeUnluckyItem(
   try {
     const action = deletionMode ? 'deleted' : 'closed';
     const closeComment = `This ${type} was ${action} due to having an unlucky number (#${item.number}). The content has been moved to #${newItemNumber}.`;
-    
+
     if (type === 'issue') {
       // Add comment and close/delete issue
       await octokit.rest.issues.createComment({
@@ -386,12 +386,12 @@ async function closeUnluckyItem(
         issue_number: item.number,
         body: closeComment
       });
-      
+
       const labels = [...item.labels.map((l: any) => l.name), 'unlucky-number', 'moved'];
       if (deletionMode) {
         labels.push('deleted', 'auto-removed');
       }
-      
+
       await octokit.rest.issues.update({
         owner,
         repo,
@@ -408,7 +408,7 @@ async function closeUnluckyItem(
         issue_number: item.number,
         body: closeComment
       });
-      
+
       await octokit.rest.pulls.update({
         owner,
         repo,
@@ -457,13 +457,13 @@ async function run(): Promise<void> {
     if (effectiveClearingMode) {
       core.info('Running in clearing mode - checking for existing unlucky items...');
       const unluckyItems = await getExistingUnluckyItems(octokit, owner, repo, config.unlucky_numbers);
-      
+
       if (unluckyItems.length > 0) {
         core.info(`Found ${unluckyItems.length} unlucky items to clear`);
-        
+
         for (const { type, item } of unluckyItems) {
           core.info(`Processing unlucky ${type} #${item.number}: ${item.title}`);
-          
+
           try {
             let newItem;
             if (type === 'issue') {
@@ -471,7 +471,7 @@ async function run(): Promise<void> {
             } else if (type === 'pr') {
               newItem = await duplicatePullRequest(octokit, owner, repo, item, config, dryRun);
             }
-            
+
             if (newItem) {
               await closeUnluckyItem(octokit, owner, repo, item, type, newItem.number, dryRun, deletionMode);
               issuesCleared++;
@@ -499,13 +499,13 @@ async function run(): Promise<void> {
       core.info('No unlucky numbers found in the upcoming range. No action needed.');
     } else {
       core.info(`Found unlucky numbers in range: ${unluckyInRange.join(', ')}`);
-      
+
       // Create placeholder issues to block unlucky numbers
       const placeholderIssues: any[] = [];
-      
+
       for (const unluckyNumber of unluckyInRange) {
         const currentNext = await getNextNumber(octokit, owner, repo);
-        
+
         // Create placeholder issues until we reach the unlucky number
         while (currentNext <= unluckyNumber) {
           const placeholder = await createPlaceholderIssue(octokit, owner, repo, config, unluckyNumber, dryRun);
@@ -513,7 +513,7 @@ async function run(): Promise<void> {
             placeholderIssues.push(placeholder);
             issuesCreated++;
           }
-          
+
           // If we've blocked the unlucky number, we can break
           if (currentNext === unluckyNumber) {
             break;
@@ -556,10 +556,10 @@ if (require.main === module) {
   run();
 }
 
-export { 
-  run, 
-  loadConfig, 
-  isUnluckyNumber, 
+export {
+  run,
+  loadConfig,
+  isUnluckyNumber,
   findUnluckyNumbersInRange,
   getExistingUnluckyItems,
   duplicateIssue,

@@ -25,6 +25,10 @@ jobs:
   superstitious-protection:
     runs-on: ubuntu-latest
     name: Protect from unlucky numbers
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
     
     steps:
       - name: Checkout
