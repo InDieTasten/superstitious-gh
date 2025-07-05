@@ -10,6 +10,7 @@ interface UnluckyItem {
 declare function loadConfig(configPath: string): SuperstitiousConfig;
 /**
  * Check if a number is unlucky according to configuration
+ * A number is unlucky if it contains any of the unlucky numbers as a substring.
  */
 declare function isUnluckyNumber(number: number, unluckyNumbers: number[]): boolean;
 /**

@@ -78,9 +78,13 @@ async function getNextNumber(octokit: ReturnType<typeof github.getOctokit>, owne
 
 /**
  * Check if a number is unlucky according to configuration
+ * A number is unlucky if it contains any of the unlucky numbers as a substring.
  */
 function isUnluckyNumber(number: number, unluckyNumbers: number[]): boolean {
-  return unluckyNumbers.includes(number);
+  const numStr = number.toString();
+  return unluckyNumbers.some(unlucky =>
+    numStr.includes(unlucky.toString())
+  );
 }
 
 /**
