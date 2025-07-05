@@ -4,9 +4,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build output
-dist/
-
 # Runtime data
 pids
 *.pid
@@ -66,3 +63,6 @@ logs
 /tmp/
 *.tmp
 *.temp
+
+# Build output mapping files
+dist/*.map
