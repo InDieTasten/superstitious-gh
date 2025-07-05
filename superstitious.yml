@@ -1,5 +1,6 @@
 # Superstitious GitHub Configuration
 # Configure which numbers to avoid and behavior settings
+# Action repository: https://github.com/InDieTasten/superstitious-gh
 
 # Numbers to avoid for issues and pull requests
 unlucky_numbers:
@@ -18,8 +19,13 @@ reservation_space: 5
 
 # Whether to enable clearing mode by default
 # In clearing mode, existing unlucky issues/PRs are duplicated
-# with safe numbers and the original unlucky ones are deleted
+# with safe numbers and the original unlucky ones are closed/deleted
 clearing_mode: false
+
+# Whether to enable deletion mode by default
+# In deletion mode, unlucky issues are marked as deleted rather than just closed
+# This applies to both placeholder cleanup and clearing mode operations
+deletion_mode: false
 
 # Placeholder issue settings
 placeholder:

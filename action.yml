@@ -30,7 +30,7 @@ outputs:
 
 runs:
   using: 'node20'
-  main: 'src/main.js'
+  main: 'dist/main.js'
 
 branding:
   icon: 'shield'

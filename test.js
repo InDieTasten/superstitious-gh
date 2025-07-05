@@ -4,7 +4,7 @@
  * Simple test script to validate core functionality
  */
 
-const { isUnluckyNumber, findUnluckyNumbersInRange, loadConfig } = require('./src/main.js');
+const { isUnluckyNumber, findUnluckyNumbersInRange, loadConfig } = require('./dist/main.js');
 
 function test(description, condition) {
   console.log(`${condition ? '✓' : '✗'} ${description}`);
