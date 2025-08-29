@@ -1,29 +1,8 @@
 /**
  * Default configuration for Superstitious GitHub Action
  */
-export interface PlaceholderConfig {
-  title: string;
-  body: string;
-  labels: string[];
-}
 
-export interface ClearingConfig {
-  preserve_content: boolean;
-  title_suffix: string;
-  add_explanation_comment: boolean;
-  explanation_comment: string;
-}
-
-export interface SuperstitiousConfig {
-  unlucky_numbers: number[];
-  reservation_space: number;
-  clearing_mode: boolean;
-  deletion_mode?: boolean;
-  placeholder: PlaceholderConfig;
-  clearing?: ClearingConfig;
-}
-
-export const DEFAULT_CONFIG: SuperstitiousConfig = {
+const DEFAULT_CONFIG = {
   unlucky_numbers: [7, 13, 666],
   reservation_space: 1,
   clearing_mode: true,
@@ -39,4 +18,8 @@ export const DEFAULT_CONFIG: SuperstitiousConfig = {
     add_explanation_comment: true,
     explanation_comment: "This issue was moved from #{original_number} to avoid an unlucky number.\nThe original issue has been closed and this is the continuation."
   }
+};
+
+module.exports = {
+  DEFAULT_CONFIG
 };

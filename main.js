@@ -1,26 +1,16 @@
-import * as core from '@actions/core';
-import * as github from '@actions/github';
-import * as fs from 'fs';
-import * as yaml from 'js-yaml';
-import { DEFAULT_CONFIG, SuperstitiousConfig, ClearingConfig } from './defaultConfig';
-
-interface UnluckyItem {
-  type: 'issue' | 'pr';
-  item: any;
-}
-
-interface IssueLabel {
-  name: string;
-  [key: string]: any;
-}
+const core = require('@actions/core');
+const github = require('@actions/github');
+const fs = require('fs');
+const yaml = require('js-yaml');
+const { DEFAULT_CONFIG } = require('./defaultConfig');
 
 /**
  * Load configuration from the specified YAML file
  */
-function loadConfig(configPath: string): SuperstitiousConfig {
+function loadConfig(configPath) {
   try {
     const configFile = fs.readFileSync(configPath, 'utf8');
-    const loadedConfig = yaml.load(configFile) as Partial<SuperstitiousConfig>;
+    const loadedConfig = yaml.load(configFile);
 
     // Merge with default config
     return {
@@ -28,7 +18,7 @@ function loadConfig(configPath: string): SuperstitiousConfig {
       ...loadedConfig
     };
   } catch (error) {
-    core.warning(`Could not load config from ${configPath}: ${(error as Error).message}`);
+    core.warning(`Could not load config from ${configPath}: ${error.message}`);
     // Return default configuration
     return DEFAULT_CONFIG;
   }
@@ -37,7 +27,7 @@ function loadConfig(configPath: string): SuperstitiousConfig {
 /**
  * Get the next issue/PR number that would be assigned
  */
-async function getNextNumber(octokit: ReturnType<typeof github.getOctokit>, owner: string, repo: string): Promise<number> {
+async function getNextNumber(octokit, owner, repo) {
   try {
     // Get the latest issues and PRs to determine the next number
     const [issuesResponse, prsResponse] = await Promise.all([
@@ -71,7 +61,7 @@ async function getNextNumber(octokit: ReturnType<typeof github.getOctokit>, owne
 
     return maxNumber + 1;
   } catch (error) {
-    core.warning(`Error getting next number: ${(error as Error).message}`);
+    core.warning(`Error getting next number: ${error.message}`);
     return 1;
   }
 }
@@ -80,7 +70,7 @@ async function getNextNumber(octokit: ReturnType<typeof github.getOctokit>, owne
  * Check if a number is unlucky according to configuration
  * A number is unlucky if it contains any of the unlucky numbers as a substring.
  */
-function isUnluckyNumber(number: number, unluckyNumbers: number[]): boolean {
+function isUnluckyNumber(number, unluckyNumbers) {
   const numStr = number.toString();
   return unluckyNumbers.some(unlucky =>
     numStr.includes(unlucky.toString())
@@ -90,8 +80,8 @@ function isUnluckyNumber(number: number, unluckyNumbers: number[]): boolean {
 /**
  * Find all unlucky numbers in a range
  */
-function findUnluckyNumbersInRange(startNumber: number, endNumber: number, unluckyNumbers: number[]): number[] {
-  const unlucky: number[] = [];
+function findUnluckyNumbersInRange(startNumber, endNumber, unluckyNumbers) {
+  const unlucky = [];
   for (let i = startNumber; i <= endNumber; i++) {
     if (isUnluckyNumber(i, unluckyNumbers)) {
       unlucky.push(i);
@@ -104,13 +94,13 @@ function findUnluckyNumbersInRange(startNumber: number, endNumber: number, unluc
  * Create a placeholder issue
  */
 async function createPlaceholderIssue(
-  octokit: ReturnType<typeof github.getOctokit>,
-  owner: string,
-  repo: string,
-  config: SuperstitiousConfig,
-  number: number,
-  dryRun: boolean
-): Promise<any> {
+  octokit,
+  owner,
+  repo,
+  config,
+  number,
+  dryRun
+) {
   if (dryRun) {
     core.info(`[DRY RUN] Would create placeholder issue for number ${number}`);
     return null;
@@ -128,7 +118,7 @@ async function createPlaceholderIssue(
     core.info(`Created placeholder issue #${response.data.number} (target: ${number})`);
     return response.data;
   } catch (error) {
-    core.error(`Failed to create placeholder issue: ${(error as Error).message}`);
+    core.error(`Failed to create placeholder issue: ${error.message}`);
     throw error;
   }
 }
@@ -137,13 +127,13 @@ async function createPlaceholderIssue(
  * Delete a placeholder issue
  */
 async function deletePlaceholderIssue(
-  octokit: ReturnType<typeof github.getOctokit>,
-  owner: string,
-  repo: string,
-  issueNumber: number,
-  dryRun: boolean,
-  deletionMode: boolean = false
-): Promise<void> {
+  octokit,
+  owner,
+  repo,
+  issueNumber,
+  dryRun,
+  deletionMode = false
+) {
   if (dryRun) {
     core.info(`[DRY RUN] Would ${deletionMode ? 'delete' : 'close'} placeholder issue #${issueNumber}`);
     return;
@@ -173,7 +163,7 @@ async function deletePlaceholderIssue(
       core.info(`Closed placeholder issue #${issueNumber}`);
     }
   } catch (error) {
-    core.warning(`Failed to ${deletionMode ? 'delete' : 'close'} placeholder issue #${issueNumber}: ${(error as Error).message}`);
+    core.warning(`Failed to ${deletionMode ? 'delete' : 'close'} placeholder issue #${issueNumber}: ${error.message}`);
   }
 }
 
@@ -181,13 +171,13 @@ async function deletePlaceholderIssue(
  * Clean up placeholder issues
  */
 async function cleanupPlaceholderIssues(
-  octokit: ReturnType<typeof github.getOctokit>,
-  owner: string,
-  repo: string,
-  placeholderIssues: any[],
-  config: SuperstitiousConfig,
-  dryRun: boolean = false
-): Promise<void> {
+  octokit,
+  owner,
+  repo,
+  placeholderIssues,
+  config,
+  dryRun = false
+) {
   const deletionMode = config.deletion_mode || false;
 
   for (const placeholder of placeholderIssues) {
@@ -199,11 +189,11 @@ async function cleanupPlaceholderIssues(
  * Get existing unlucky issues/PRs for clearing mode
  */
 async function getExistingUnluckyItems(
-  octokit: ReturnType<typeof github.getOctokit>,
-  owner: string,
-  repo: string,
-  unluckyNumbers: number[]
-): Promise<UnluckyItem[]> {
+  octokit,
+  owner,
+  repo,
+  unluckyNumbers
+) {
   try {
     const [issuesResponse, prsResponse] = await Promise.all([
       octokit.rest.issues.listForRepo({
@@ -220,12 +210,12 @@ async function getExistingUnluckyItems(
       })
     ]);
 
-    const unluckyItems: UnluckyItem[] = [];
+    const unluckyItems = [];
 
     // Check issues (excluding PRs and our own placeholder issues)
     issuesResponse.data
       .filter(issue => !issue.pull_request)
-      .filter(issue => !issue.labels.some((label: any) =>
+      .filter(issue => !issue.labels.some(label =>
         typeof label === 'string' ? label === 'superstitious' : label.name === 'superstitious'
       ))
       .forEach(issue => {
@@ -243,7 +233,7 @@ async function getExistingUnluckyItems(
 
     return unluckyItems;
   } catch (error) {
-    core.error(`Error getting existing unlucky items: ${(error as Error).message}`);
+    core.error(`Error getting existing unlucky items: ${error.message}`);
     return [];
   }
 }
@@ -252,20 +242,20 @@ async function getExistingUnluckyItems(
  * Duplicate an issue with a safe number
  */
 async function duplicateIssue(
-  octokit: ReturnType<typeof github.getOctokit>,
-  owner: string,
-  repo: string,
-  originalIssue: any,
-  config: SuperstitiousConfig,
-  dryRun: boolean
-): Promise<any> {
+  octokit,
+  owner,
+  repo,
+  originalIssue,
+  config,
+  dryRun
+) {
   if (dryRun) {
     core.info(`[DRY RUN] Would duplicate issue #${originalIssue.number}: ${originalIssue.title}`);
     return null;
   }
 
   try {
-    const clearingConfig: ClearingConfig = config.clearing || {
+    const clearingConfig = config.clearing || {
       preserve_content: true,
       title_suffix: ' (moved from unlucky number)',
       add_explanation_comment: true,
@@ -279,8 +269,8 @@ async function duplicateIssue(
       repo,
       title: originalIssue.title + titleSuffix,
       body: originalIssue.body || '',
-      labels: originalIssue.labels.map((label: any) => label.name),
-      assignees: originalIssue.assignees.map((assignee: any) => assignee.login),
+      labels: originalIssue.labels.map(label => label.name),
+      assignees: originalIssue.assignees.map(assignee => assignee.login),
       milestone: originalIssue.milestone ? originalIssue.milestone.number : undefined
     });
 
@@ -302,7 +292,7 @@ async function duplicateIssue(
 
     return newIssue.data;
   } catch (error) {
-    core.error(`Failed to duplicate issue #${originalIssue.number}: ${(error as Error).message}`);
+    core.error(`Failed to duplicate issue #${originalIssue.number}: ${error.message}`);
     throw error;
   }
 }
@@ -311,20 +301,20 @@ async function duplicateIssue(
  * Duplicate a pull request (create issue since we can't duplicate PRs)
  */
 async function duplicatePullRequest(
-  octokit: ReturnType<typeof github.getOctokit>,
-  owner: string,
-  repo: string,
-  originalPR: any,
-  config: SuperstitiousConfig,
-  dryRun: boolean
-): Promise<any> {
+  octokit,
+  owner,
+  repo,
+  originalPR,
+  config,
+  dryRun
+) {
   if (dryRun) {
     core.info(`[DRY RUN] Would create issue for unlucky PR #${originalPR.number}: ${originalPR.title}`);
     return null;
   }
 
   try {
-    const clearingConfig: ClearingConfig = config.clearing || {
+    const clearingConfig = config.clearing || {
       preserve_content: true,
       title_suffix: ' (moved from unlucky number)',
       add_explanation_comment: true,
@@ -355,7 +345,7 @@ ${originalPR.body || ''}`;
     core.info(`Created tracking issue #${newIssue.data.number} for unlucky PR #${originalPR.number}`);
     return newIssue.data;
   } catch (error) {
-    core.error(`Failed to create tracking issue for PR #${originalPR.number}: ${(error as Error).message}`);
+    core.error(`Failed to create tracking issue for PR #${originalPR.number}: ${error.message}`);
     throw error;
   }
 }
@@ -364,15 +354,15 @@ ${originalPR.body || ''}`;
  * Close an unlucky item after duplication
  */
 async function closeUnluckyItem(
-  octokit: ReturnType<typeof github.getOctokit>,
-  owner: string,
-  repo: string,
-  item: any,
-  type: string,
-  newItemNumber: number,
-  dryRun: boolean,
-  deletionMode: boolean = false
-): Promise<void> {
+  octokit,
+  owner,
+  repo,
+  item,
+  type,
+  newItemNumber,
+  dryRun,
+  deletionMode = false
+) {
   if (dryRun) {
     core.info(`[DRY RUN] Would ${deletionMode ? 'delete' : 'close'} unlucky ${type} #${item.number}`);
     return;
@@ -391,7 +381,7 @@ async function closeUnluckyItem(
         body: closeComment
       });
 
-      const labels = [...item.labels.map((l: any) => l.name), 'unlucky-number', 'moved'];
+      const labels = [...item.labels.map(l => l.name), 'unlucky-number', 'moved'];
       if (deletionMode) {
         labels.push('deleted', 'auto-removed');
       }
@@ -423,14 +413,14 @@ async function closeUnluckyItem(
 
     core.info(`${deletionMode ? 'Deleted' : 'Closed'} unlucky ${type} #${item.number}`);
   } catch (error) {
-    core.warning(`Failed to ${deletionMode ? 'delete' : 'close'} unlucky ${type} #${item.number}: ${(error as Error).message}`);
+    core.warning(`Failed to ${deletionMode ? 'delete' : 'close'} unlucky ${type} #${item.number}: ${error.message}`);
   }
 }
 
 /**
  * Main action function
  */
-async function run(): Promise<void> {
+async function run() {
   try {
     // Get inputs
     const token = core.getInput('github-token', { required: true });
@@ -481,7 +471,7 @@ async function run(): Promise<void> {
               issuesCleared++;
             }
           } catch (error) {
-            core.error(`Failed to clear unlucky ${type} #${item.number}: ${(error as Error).message}`);
+            core.error(`Failed to clear unlucky ${type} #${item.number}: ${error.message}`);
           }
         }
       } else {
@@ -505,7 +495,7 @@ async function run(): Promise<void> {
       core.info(`Found unlucky numbers in range: ${unluckyInRange.join(', ')}`);
 
       // Create placeholder issues to block unlucky numbers
-      const placeholderIssues: any[] = [];
+      const placeholderIssues = [];
 
       for (const unluckyNumber of unluckyInRange) {
         // Create placeholder issues until we reach the unlucky number
@@ -550,8 +540,8 @@ async function run(): Promise<void> {
     core.info(`Next safe number: ${nextSafeNumber}`);
 
   } catch (error) {
-    core.setFailed(`Action failed: ${(error as Error).message}`);
-    core.error((error as Error).stack || 'No stack trace available');
+    core.setFailed(`Action failed: ${error.message}`);
+    core.error(error.stack || 'No stack trace available');
   }
 }
 
@@ -560,7 +550,7 @@ if (require.main === module) {
   run();
 }
 
-export {
+module.exports = {
   run,
   loadConfig,
   isUnluckyNumber,

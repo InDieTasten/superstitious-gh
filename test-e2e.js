@@ -132,7 +132,7 @@ Module.prototype.require = function (id) {
   return originalRequire.apply(this, arguments);
 };
 
-// Import the compiled main module
+// Import the main module
 const {
   run,
   loadConfig,
@@ -142,7 +142,7 @@ const {
   duplicateIssue,
   duplicatePullRequest,
   closeUnluckyItem
-} = require('./dist/index.js');
+} = require('./main.js');
 
 // Test helper function
 function test(description, condition) {
