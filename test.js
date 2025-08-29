@@ -5,6 +5,7 @@
  */
 
 const { isUnluckyNumber, findUnluckyNumbersInRange, loadConfig } = require('./main.js');
+const { testShortReservationRangeFix } = require('./test-bug-fix.js');
 
 function test(description, condition) {
   console.log(`${condition ? '✓' : '✗'} ${description}`);
@@ -52,6 +53,9 @@ try {
 const defaultConfig = loadConfig('non-existent-file.yml');
 test('Non-existent config returns defaults', defaultConfig !== null);
 test('Default config has unlucky numbers', Array.isArray(defaultConfig.unlucky_numbers));
+
+// Test the bug fix
+testShortReservationRangeFix();
 
 console.log('\n🎉 All tests passed!');
 console.log('\nCore functionality validation complete.');

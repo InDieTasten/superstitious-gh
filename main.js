@@ -497,22 +497,16 @@ async function run() {
       // Create placeholder issues to block unlucky numbers
       const placeholderIssues = [];
 
-      for (const unluckyNumber of unluckyInRange) {
-        // Create placeholder issues until we reach the unlucky number
-        let currentNext = await getNextNumber(octokit, owner, repo);
-        while (currentNext <= unluckyNumber) {
-          const placeholder = await createPlaceholderIssue(octokit, owner, repo, config, unluckyNumber, dryRun);
-          if (placeholder) {
-            placeholderIssues.push(placeholder);
-            issuesCreated++;
-          }
-          // Update currentNext after each creation to avoid infinite loop
-          currentNext = await getNextNumber(octokit, owner, repo);
-          // If we've blocked the unlucky number, we can break
-          if (currentNext > unluckyNumber) {
-            break;
-          }
+      // Create placeholder issues until the next number is safe
+      let currentNext = await getNextNumber(octokit, owner, repo);
+      while (isUnluckyNumber(currentNext, config.unlucky_numbers)) {
+        const placeholder = await createPlaceholderIssue(octokit, owner, repo, config, currentNext, dryRun);
+        if (placeholder) {
+          placeholderIssues.push(placeholder);
+          issuesCreated++;
         }
+        // Update currentNext after each creation to avoid infinite loop
+        currentNext = await getNextNumber(octokit, owner, repo);
       }
 
       // Clean up placeholder issues after creation
