@@ -66,3 +66,6 @@ logs
 
 # Build output mapping files
 dist/*.map
+
+# But include dist/index.js for GitHub Action
+!dist/index.js
