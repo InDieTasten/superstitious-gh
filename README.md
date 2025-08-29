@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: InDieTasten/superstitious-gh@v1
+      - uses: InDieTasten/superstitious-gh@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -141,7 +141,7 @@ deletion_mode: false,
 ### Basic Protection
 
 ```yaml
-- uses: InDieTasten/superstitious-gh@v1
+- uses: InDieTasten/superstitious-gh@v2
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -149,7 +149,7 @@ deletion_mode: false,
 ### Custom Configuration
 
 ```yaml
-- uses: InDieTasten/superstitious-gh@v1
+- uses: InDieTasten/superstitious-gh@v2
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     config-path: '.github/superstitious-config.yml'
