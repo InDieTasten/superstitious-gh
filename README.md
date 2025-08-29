@@ -37,7 +37,7 @@ on:
   pull_request:
     types: [opened]
   schedule:
-    - cron: '0 * * * *'  # Run hourly for proactive protection
+    - cron: '0 0 * * *'  # Run daily for proactive protection
 
 jobs:
   protect:
