@@ -5,8 +5,18 @@
  * Tests the action with mocked GitHub API calls to ensure full functionality
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import {
+  run,
+  loadConfig,
+  isUnluckyNumber,
+  findUnluckyNumbersInRange,
+  getExistingUnluckyItems,
+  duplicateIssue,
+  duplicatePullRequest,
+  closeUnluckyItem,
+  setDeps
+} from './main.js';
 
 // Mock GitHub API responses
 const mockGitHubAPI = {
@@ -123,26 +133,8 @@ clearing:
   return originalReadFileSync.call(this, filePath, encoding);
 };
 
-// Override require to return our mocks
-const Module = require('module');
-const originalRequire = Module.prototype.require;
-Module.prototype.require = function (id) {
-  if (id === '@actions/core') return mockCore;
-  if (id === '@actions/github') return mockGitHub;
-  return originalRequire.apply(this, arguments);
-};
-
-// Import the main module
-const {
-  run,
-  loadConfig,
-  isUnluckyNumber,
-  findUnluckyNumbersInRange,
-  getExistingUnluckyItems,
-  duplicateIssue,
-  duplicatePullRequest,
-  closeUnluckyItem
-} = require('./main.js');
+// Run the action against our mocks
+setDeps({ core: mockCore, github: mockGitHub });
 
 // Test helper function
 function test(description, condition) {

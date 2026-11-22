@@ -4,8 +4,8 @@
  * Simple test script to validate core functionality
  */
 
-const { isUnluckyNumber, findUnluckyNumbersInRange, loadConfig } = require('./main.js');
-const { testShortReservationRangeFix } = require('./test-bug-fix.js');
+import { isUnluckyNumber, findUnluckyNumbersInRange, loadConfig } from './main.js';
+import { testShortReservationRangeFix } from './test-bug-fix.js';
 
 function test(description, condition) {
   console.log(`${condition ? '✓' : '✗'} ${description}`);

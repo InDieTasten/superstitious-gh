@@ -2,6 +2,7 @@
   "name": "superstitious-gh",
   "version": "1.0.0",
   "description": "GitHub Action to prevent unlucky issue and PR numbers",
+  "type": "module",
   "main": "main.js",
   "scripts": {
     "test": "npm run test:all",
@@ -20,11 +21,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.1",
-    "js-yaml": "^4.1.0"
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "js-yaml": "^5.5.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.3"
+    "@vercel/ncc": "^0.45.0"
   }
 }

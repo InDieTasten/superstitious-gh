@@ -1,8 +1,20 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const fs = require('fs');
-const yaml = require('js-yaml');
-const { DEFAULT_CONFIG } = require('./defaultConfig');
+import * as coreModule from '@actions/core';
+import * as githubModule from '@actions/github';
+import fs from 'node:fs';
+import * as yaml from 'js-yaml';
+import { pathToFileURL } from 'node:url';
+import { DEFAULT_CONFIG } from './defaultConfig.js';
+
+let core = coreModule;
+let github = githubModule;
+
+/**
+ * Replace the action dependencies with test doubles.
+ */
+export function setDeps(deps = {}) {
+  if (deps.core) core = deps.core;
+  if (deps.github) github = deps.github;
+}
 
 /**
  * Load configuration from the specified YAML file
@@ -10,7 +22,10 @@ const { DEFAULT_CONFIG } = require('./defaultConfig');
 function loadConfig(configPath) {
   try {
     const configFile = fs.readFileSync(configPath, 'utf8');
-    const loadedConfig = yaml.load(configFile);
+    // CORE_SCHEMA is the js-yaml 5 default; keep !!merge support from js-yaml 4
+    const loadedConfig = yaml.load(configFile, {
+      schema: yaml.CORE_SCHEMA.withTags(yaml.mergeTag)
+    });
 
     // Merge with default config
     return {
@@ -540,11 +555,11 @@ async function run() {
 }
 
 // Run the action
-if (require.main === module) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   run();
 }
 
-module.exports = {
+export {
   run,
   loadConfig,
   isUnluckyNumber,
