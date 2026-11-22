@@ -4,7 +4,8 @@
  * Test for short reservation range bug fix (added to test suite)
  */
 
-const { isUnluckyNumber, findUnluckyNumbersInRange } = require('./main.js');
+import { pathToFileURL } from 'node:url';
+import { isUnluckyNumber, findUnluckyNumbersInRange } from './main.js';
 
 function testShortReservationRangeFix() {
   function test(description, condition) {
@@ -48,12 +49,11 @@ function testShortReservationRangeFix() {
   test('Boundary case: 139 should need exactly 1 placeholder', placeholdersCreated === 1);
 }
 
+export { testShortReservationRangeFix };
+
 // Only run if this script is executed directly
-if (require.main === module) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log('Running bug fix tests...');
   testShortReservationRangeFix();
   console.log('🎉 Bug fix tests passed!');
-} else {
-  // Export for use in other test files
-  module.exports = { testShortReservationRangeFix };
 }

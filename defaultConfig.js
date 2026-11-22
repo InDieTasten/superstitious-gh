@@ -20,6 +20,4 @@ const DEFAULT_CONFIG = {
   }
 };
 
-module.exports = {
-  DEFAULT_CONFIG
-};
+export { DEFAULT_CONFIG };
